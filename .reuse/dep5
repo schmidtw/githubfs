@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: githubfs
+Upstream-Contact: Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+Source: https://github.com/schmidtw/githubfs
+
+Files: .golangci.yml .github/* .github/workflow/* go.mod go.sum .gitignore .licensed.yml MAINTAINERS.md README.md
+Copyright: SPDX-FileCopyrightText: 2022 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+License: Apache-2.0
+
+Files: examples/simple/go.mod examples/simple/go.sum
+Copyright: SPDX-FileCopyrightText: 2022 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+License: Apache-2.0
