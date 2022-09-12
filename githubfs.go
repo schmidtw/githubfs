@@ -434,7 +434,7 @@ func getEntireGitDir(gfs *FS, d *dir) error {
 }
 
 // getGitDir fetches a single directory via the github API. This isn't fast, but
-// there are conditions where it is adventageous over fetching everything all at
+// there are conditions where it is advantageous over fetching everything all at
 // once.
 func getGitDir(gfs *FS, d *dir) error {
 	path := strings.Join(d.path, "/")
