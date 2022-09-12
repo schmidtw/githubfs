@@ -3,7 +3,7 @@ Upstream-Name: githubfs
 Upstream-Contact: Weston Schmidt <weston_schmidt@alumni.purdue.edu>
 Source: https://github.com/schmidtw/githubfs
 
-Files: .golangci.yml .github/* .github/workflow/* go.mod go.sum .gitignore .licensed.yml MAINTAINERS.md README.md
+Files: .golangci.yml .github/* .github/workflow/* go.mod go.sum .gitignore .licensed.yml MAINTAINERS.md README.md CODE_OF_CONDUCT.md
 Copyright: SPDX-FileCopyrightText: 2022 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
 License: Apache-2.0
 
