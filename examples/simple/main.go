@@ -29,6 +29,13 @@ func main() {
 		if err != nil || d.IsDir() {
 			return err
 		}
+		if "dependabot.yml" == d.Name() || "sha256sum.txt" == d.Name() {
+			b, err := fs.ReadFile(gfs, path)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(b))
+		}
 
 		return nil
 	})

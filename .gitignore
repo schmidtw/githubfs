@@ -1,2 +1,7 @@
 # vi related
 *.sw[a-p]
+
+go.work
+go.work.sum
+
+examples/simple/simple

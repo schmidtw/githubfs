@@ -10,3 +10,7 @@ License: Apache-2.0
 Files: examples/simple/go.mod examples/simple/go.sum
 Copyright: SPDX-FileCopyrightText: 2022 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
 License: Apache-2.0
+
+Files: tarballs/**
+Copyright: SPDX-FileCopyrightText: 2022 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+License: Apache-2.0
