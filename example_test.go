@@ -13,7 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func ExampleTest() {
+func Example() {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
