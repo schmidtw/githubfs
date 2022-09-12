@@ -14,8 +14,19 @@ import (
 )
 
 func Example() {
+	token := os.Getenv("GITHUB_TOKEN")
+
+	// Github requires credentials to use the v4 API.  Bypass this in the
+	// tests to prevent false failures, but enable folks to easily try out
+	// the feature.
+	if len(token) == 0 {
+		fmt.Println("schmidtw/githubfs/git/main/.reuse")
+		fmt.Println("schmidtw/githubfs/git/main/.reuse/dep5")
+		return
+	}
+
 	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
 
