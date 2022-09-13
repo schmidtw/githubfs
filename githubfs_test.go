@@ -69,6 +69,51 @@ func TestNew(t *testing.T) {
 					allowArchived: true,
 				},
 			},
+		}, {
+			description: "specify orgs and repos using with.",
+			opts: []Option{
+				WithSlug("foo"),                    // org: foo
+				WithSlug("bar/", true),             // org: bar
+				WithSlug("bar//", true),            // org: bar
+				WithSlug("org/repo"),               // org: org repo: repo
+				WithSlug("cat/repo/"),              // org: org repo: repo
+				WithSlug("cat/repo:branch1"),       // org: cat repo: repo branch: branch1
+				WithSlug("cat/repo/:branch2"),      // org: cat repo
+				WithSlug("cat/repo:branch3/other"), // org: cat repo: repo branch: branch3
+				WithSlug("cat/repo:branch4:other"), // org: cat repo: repo branch: branch4
+			},
+			inputs: []input{
+				{
+					org: "foo",
+				}, {
+					org:           "bar",
+					allowArchived: true,
+				}, {
+					org:           "bar",
+					allowArchived: true,
+				}, {
+					org:  "org",
+					repo: "repo",
+				}, {
+					org:  "cat",
+					repo: "repo",
+				}, {
+					org:    "cat",
+					repo:   "repo",
+					branch: "branch1",
+				}, {
+					org:  "cat",
+					repo: "repo",
+				}, {
+					org:    "cat",
+					repo:   "repo",
+					branch: "branch3",
+				}, {
+					org:    "cat",
+					repo:   "repo",
+					branch: "branch4",
+				},
+			},
 		},
 	}
 

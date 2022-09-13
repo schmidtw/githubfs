@@ -104,7 +104,7 @@ func WithOrg(org string, allowArchivedrepos ...bool) Option {
 	}
 }
 
-// WithRepo configures a specific owner, repository and branchs to include.  If
+// WithRepo configures a specific owner, repository and branches to include.  If
 // no branch is specified the default branch is selected.  Multiple branches may
 // be specified in one call.
 func WithRepo(org string, repo string, branches ...string) Option {
@@ -127,6 +127,42 @@ func WithRepo(org string, repo string, branches ...string) Option {
 				allowArchived: true,
 			})
 		}
+	}
+}
+
+// WithSlug provides a way to easily configure a set of repos, or unique repo
+// based on the slug string.
+//
+// slug = "org" 			 (the entire organization with default branch)
+// slug = "org/repo" 		 (the exact repository with default branch)
+// slug = "org/repo:branch"	 (the exact repository with specific branch)
+//
+// Repos marked as archived are filtered unless allowArchivedrepos is set to
+// true.
+func WithSlug(slug string, allowArchivedrepos ...bool) Option {
+	var org, repo, branch string
+	list := strings.Split(slug, "/")
+	org = list[0]
+	if len(list) > 1 && len(list[1]) > 0 {
+		repo = list[1]
+		list = strings.Split(repo, ":")
+		repo = list[0]
+		if len(list) > 1 && len(list[1]) > 0 {
+			branch = list[1]
+		}
+	}
+
+	allowArchived := false
+	if len(allowArchivedrepos) > 0 {
+		allowArchived = allowArchivedrepos[len(allowArchivedrepos)-1]
+	}
+	return func(gfs *FS) {
+		gfs.inputs = append(gfs.inputs, input{
+			org:           org,
+			repo:          repo,
+			branch:        branch,
+			allowArchived: allowArchived,
+		})
 	}
 }
 
