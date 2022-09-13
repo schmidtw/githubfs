@@ -68,33 +68,19 @@ var _ fs.FS = (*FS)(nil)
 
 // FS provides the githubfs
 type FS struct {
-	httpClient *http.Client
-	gqlClient  *gql.Client
-	connected  bool
-	githubUrl  string
-	rawUrl     string
-	inputs     []input
-	threshold  int
-	root       *dir
+	httpClient  *http.Client
+	gqlClient   *gql.Client
+	connected   bool
+	githubUrl   string
+	rawUrl      string
+	inputs      []input
+	threshold   int
+	root        *dir
+	getGitDirFn func(*FS, *dir) error
 }
 
 // Option is the type used for options.
 type Option func(gfs *FS)
-
-// WithURL provides a way to set the URL for the specific github instance to use.
-func WithGithubURL(url string) Option {
-	return func(gfs *FS) {
-		gfs.githubUrl = url
-	}
-}
-
-// WithRawURL provides a way to set the URL for downloading files via the web
-// interface vs. a tarball.
-func WithRawDownloadURL(url string) Option {
-	return func(gfs *FS) {
-		gfs.rawUrl = url
-	}
-}
 
 // WithHttpClient provides a way to set the HTTP client to use.
 func WithHttpClient(c *http.Client) Option {
@@ -154,14 +140,43 @@ func WithThresholdInKB(max int) Option {
 	}
 }
 
+// WithGithubEnterprise specifies the API version to support for backwards
+// compatibility.  The version value should be "3.3", "3.4", "3.5", "3.6", etc.
+// The baseURL passed in should look like this:
+//
+// http://github.company.com
+//
+// The needed paths will be added to the baseURL.
+//
+// GHEC should not use this option as it uses the public API and hosting.
+func WithGithubEnterprise(baseURL, version string) Option {
+	switch version {
+	default:
+		return func(gfs *FS) {
+			gfs.githubUrl = baseURL + "/api/graphql"
+			gfs.rawUrl = baseURL + "/raw"
+			gfs.getGitDirFn = getGitDirV3_3
+		}
+	}
+}
+
+// withTestURL provides a way to inject a test url.
+func withTestURL(url string) Option {
+	return func(gfs *FS) {
+		gfs.githubUrl = url
+		gfs.rawUrl = url
+	}
+}
+
 // New creates a new githubfs.FS object with the specified configuration.
 func New(opts ...Option) *FS {
 	tenMB := 10 * 1024
 	gfs := FS{
-		httpClient: http.DefaultClient,
-		githubUrl:  "https://api.github.com/graphql",
-		rawUrl:     "https://raw.githubusercontent.com",
-		threshold:  tenMB,
+		httpClient:  http.DefaultClient,
+		githubUrl:   "https://api.github.com/graphql",
+		rawUrl:      "https://raw.githubusercontent.com",
+		threshold:   tenMB,
+		getGitDirFn: getGitDir,
 	}
 
 	for _, opt := range opts {
@@ -258,7 +273,7 @@ func (gfs *FS) newRepo(org, repo, branch string, releases, packages bool, size i
 	git := r.mkdir(dirNameGit, notInPath())
 
 	if len(branch) > 0 {
-		opt := withFetcher(getGitDir)
+		opt := withFetcher(gfs.getGitDirFn)
 		if size <= gfs.threshold {
 			opt = withFetcher(getEntireGitDir)
 		}
@@ -453,7 +468,7 @@ func getGitDir(gfs *FS, d *dir) error {
 
 	/*
 		query {
-		  repository(name: "repo", owner: "org", followRenames: false) {
+		  repository(name: "repo", owner: "org") {
 		    object(expression: "main:") {
 		      ... on Tree {
 		        entries {
@@ -477,7 +492,7 @@ func getGitDir(gfs *FS, d *dir) error {
 					}
 				} `graphql:"... on Tree"`
 			} `graphql:"object(expression: $exp)"`
-		} `graphql:"repository(name: $repo, owner: $owner, followRenames: true)"`
+		} `graphql:"repository(name: $repo, owner: $owner)"`
 	}
 
 	if err := gfs.gqlClient.Query(context.Background(), &query, vars); err != nil {

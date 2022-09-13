@@ -28,13 +28,10 @@ func TestNew(t *testing.T) {
 		{
 			description: "basic test",
 		}, {
-			description: "different github url",
-			ghUrl:       "https://example.com",
-			opts:        []Option{WithGithubURL("https://example.com")},
-		}, {
-			description: "different http url",
-			rawUrl:      "https://example.com",
-			opts:        []Option{WithRawDownloadURL("https://example.com")},
+			description: "use github enterprise",
+			ghUrl:       "https://example.com/api/graphql",
+			rawUrl:      "https://example.com/raw",
+			opts:        []Option{WithGithubEnterprise("https://example.com", "3.3")},
 		}, {
 			description:   "different http client",
 			nilHttpClient: true,
@@ -246,7 +243,24 @@ func TestMostThings(t *testing.T) {
 			opts:        []Option{WithRepo("org", "repo")},
 			expect:      []string{"./org/repo/git/main"},
 			expectErr:   true,
-		},
+		}, {
+			description: "fetch enterprise v3.3 repo a file at a time.",
+			opts:        []Option{WithRepo("org", "repo"), WithThresholdInKB(0), WithGithubEnterprise("ignored", "3.3")},
+			payload:     []string{singleRepoReponse, baseDirectoryResponseV3_3, readmeResponse},
+			expect:      []string{"org/repo/git/main", "org/repo/git/main/README.md"},
+		}, {
+			description: "fetch enterprise v3.3 repo a file at a time with invalid json.",
+			opts:        []Option{WithRepo("org", "repo"), WithThresholdInKB(0), WithGithubEnterprise("ignored", "3.3")},
+			payload:     []string{singleRepoReponse, invalidJsonResponse},
+			expect:      []string{"org/repo/git/main/README.md"},
+			expectErr:   true,
+		}, {
+			description: "fetch enterprise v3.3 repo a file at a time with invalid file mode.",
+			opts:        []Option{WithRepo("org", "repo"), WithThresholdInKB(0), WithGithubEnterprise("ignored", "3.3")},
+			payload:     []string{singleRepoReponse, baseDirectoryResponseUnownFileModeV3_3},
+			expect:      []string{"org/repo/git/main/README.md"},
+			expectErr:   true,
+		}, {},
 	}
 
 	for _, tc := range tests {
@@ -292,8 +306,8 @@ func TestMostThings(t *testing.T) {
 
 			server.Start()
 
-			tc.opts = append(tc.opts, WithGithubURL(server.URL), WithRawDownloadURL(server.URL))
-			gfs := New(tc.opts...)
+			opts := append(tc.opts, withTestURL(server.URL))
+			gfs := New(opts...)
 			require.NotNil(gfs)
 
 			for _, path := range tc.expect {
@@ -674,6 +688,60 @@ var baseDirectoryResponseUnownFileMode = `{
           {
             "name": "unknown",
             "size": 529,
+            "mode": 99999
+          }
+        ]
+      }
+    }
+  }
+}`
+
+var baseDirectoryResponseV3_3 = `{
+  "data": {
+    "repository": {
+      "object": {
+        "entries": [
+          {
+            "name": ".github",
+            "mode": 16384
+          },
+          {
+            "name": ".gitignore",
+            "mode": 33188
+          },
+          {
+            "name": "README.md",
+            "mode": 33188
+          },
+          {
+            "name": "executable",
+            "mode": 33261
+          }
+        ]
+      }
+    }
+  }
+}`
+
+var baseDirectoryResponseUnownFileModeV3_3 = `{
+  "data": {
+    "repository": {
+      "object": {
+        "entries": [
+          {
+            "name": ".github",
+            "mode": 16384
+          },
+          {
+            "name": ".gitignore",
+            "mode": 33188
+          },
+          {
+            "name": "README.md",
+            "mode": 33188
+          },
+          {
+            "name": "unknown",
             "mode": 99999
           }
         ]
