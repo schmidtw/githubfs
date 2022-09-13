@@ -166,6 +166,22 @@ func WithSlug(slug string, allowArchivedrepos ...bool) Option {
 	}
 }
 
+// WithSlugs provides a way to pass in an array of slugs and it will take care
+// of the rest.  Works like WithSlug() except no option for archived repos.
+func WithSlugs(slugs ...string) Option {
+	var opts []Option
+
+	for _, slug := range slugs {
+		opts = append(opts, WithSlug(slug))
+	}
+
+	return func(gfs *FS) {
+		for _, opt := range opts {
+			opt(gfs)
+		}
+	}
+}
+
 // WithThresholdInKB sets the maximum size to download the entire repository vs.
 // downloading the individual files.
 //

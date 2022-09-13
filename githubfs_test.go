@@ -70,7 +70,7 @@ func TestNew(t *testing.T) {
 				},
 			},
 		}, {
-			description: "specify orgs and repos using with.",
+			description: "specify orgs and repos using WithSlug.",
 			opts: []Option{
 				WithSlug("foo"),                    // org: foo
 				WithSlug("bar/", true),             // org: bar
@@ -112,6 +112,23 @@ func TestNew(t *testing.T) {
 					org:    "cat",
 					repo:   "repo",
 					branch: "branch4",
+				},
+			},
+		}, {
+			description: "specify orgs and repos using WithSlugs.",
+			opts: []Option{
+				WithSlugs("foo", "foo/bar", "cat/repo:branch"),
+			},
+			inputs: []input{
+				{
+					org: "foo",
+				}, {
+					org:  "foo",
+					repo: "bar",
+				}, {
+					org:    "cat",
+					repo:   "repo",
+					branch: "branch",
 				},
 			},
 		},
