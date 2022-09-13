@@ -82,7 +82,7 @@ type FS struct {
 type Option func(gfs *FS)
 
 // WithURL provides a way to set the URL for the specific github instance to use.
-func WithURL(url string) Option {
+func WithGithubURL(url string) Option {
 	return func(gfs *FS) {
 		gfs.githubUrl = url
 	}
@@ -90,7 +90,7 @@ func WithURL(url string) Option {
 
 // WithRawURL provides a way to set the URL for downloading files via the web
 // interface vs. a tarball.
-func WithRawURL(url string) Option {
+func WithRawDownloadURL(url string) Option {
 	return func(gfs *FS) {
 		gfs.rawUrl = url
 	}
@@ -103,9 +103,12 @@ func WithHttpClient(c *http.Client) Option {
 	}
 }
 
-// WithFullOrg instructs the filesystem to include all the repositories owned
+// WithOrg instructs the filesystem to include all the repositories owned
 // by an organization or user and the default branches of each repo.
-func WithFullOrg(org string, allowArchivedrepos ...bool) Option {
+//
+// Repos marked as archived are filtered unless allowArchivedrepos is set to
+// true.
+func WithOrg(org string, allowArchivedrepos ...bool) Option {
 	with := false
 	if len(allowArchivedrepos) > 0 {
 		with = allowArchivedrepos[len(allowArchivedrepos)-1]
@@ -116,7 +119,8 @@ func WithFullOrg(org string, allowArchivedrepos ...bool) Option {
 }
 
 // WithRepo configures a specific owner, repository and branchs to include.  If
-// no branch is specified the default branch is selected.
+// no branch is specified the default branch is selected.  Multiple branches may
+// be specified in one call.
 func WithRepo(org string, repo string, branches ...string) Option {
 	if len(branches) == 0 {
 		return func(gfs *FS) {
@@ -142,6 +146,8 @@ func WithRepo(org string, repo string, branches ...string) Option {
 
 // WithThresholdInKB sets the maximum size to download the entire repository vs.
 // downloading the individual files.
+//
+// Defaults to downloading a repo snapshot if the repo is less than 10MB.
 func WithThresholdInKB(max int) Option {
 	return func(gfs *FS) {
 		gfs.threshold = max

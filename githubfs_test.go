@@ -30,11 +30,11 @@ func TestNew(t *testing.T) {
 		}, {
 			description: "different github url",
 			ghUrl:       "https://example.com",
-			opts:        []Option{WithURL("https://example.com")},
+			opts:        []Option{WithGithubURL("https://example.com")},
 		}, {
 			description: "different http url",
 			rawUrl:      "https://example.com",
-			opts:        []Option{WithRawURL("https://example.com")},
+			opts:        []Option{WithRawDownloadURL("https://example.com")},
 		}, {
 			description:   "different http client",
 			nilHttpClient: true,
@@ -45,8 +45,8 @@ func TestNew(t *testing.T) {
 			opts:        []Option{WithThresholdInKB(10)},
 		}, {
 			description: "specify orgs and repos.",
-			opts: []Option{WithFullOrg("foo"),
-				WithFullOrg("bar", true),
+			opts: []Option{WithOrg("foo"),
+				WithOrg("bar", true),
 				WithRepo("org", "repo"),
 				WithRepo("cat", "repo", "branch1", "branch2"),
 			},
@@ -149,22 +149,22 @@ func TestMostThings(t *testing.T) {
 			expectErr:   true,
 		}, {
 			description: "fetch a few of repos test",
-			opts:        []Option{WithFullOrg("org")},
+			opts:        []Option{WithOrg("org")},
 			payload:     []string{twoReposResponse},
 			expect:      []string{"org/.github/git", "org/.go-template/git"},
 		}, {
 			description: "fetch a few of repos spread across requests test",
-			opts:        []Option{WithFullOrg("org")},
+			opts:        []Option{WithOrg("org")},
 			payload:     []string{twoReposOneAtATimeResponse001, twoReposOneAtATimeResponse002},
 			expect:      []string{"org/.github/git", "org/.go-template/git"},
 		}, {
 			description: "fetch a disabled and archived repo.",
-			opts:        []Option{WithFullOrg("org")},
+			opts:        []Option{WithOrg("org")},
 			payload:     []string{twoReposOneDisabledResponse},
 			unexpected:  []string{"org/.github/git", "org/.go-template/git"},
 		}, {
 			description: "get an invalid response during fetching a single repo",
-			opts:        []Option{WithFullOrg("org")},
+			opts:        []Option{WithOrg("org")},
 			payload:     []string{invalidJsonResponse},
 			expect:      []string{"org/repo/git", "org/moved/git"},
 			expectErr:   true,
@@ -292,7 +292,7 @@ func TestMostThings(t *testing.T) {
 
 			server.Start()
 
-			tc.opts = append(tc.opts, WithURL(server.URL), WithRawURL(server.URL))
+			tc.opts = append(tc.opts, WithGithubURL(server.URL), WithRawDownloadURL(server.URL))
 			gfs := New(tc.opts...)
 			require.NotNil(gfs)
 
