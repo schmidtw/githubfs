@@ -66,5 +66,5 @@ func main() {
 
 - Symlinks are only supported for files fetched for small repos (where the fetch
   occurs via a tarball).
-- Packages are not supported by the graphql API, so they aren't supported here.
+- Packages are not supported by the github graphql API, so they aren't supported here.
 - Gists are not supported presently.
