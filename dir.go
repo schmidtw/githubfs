@@ -205,9 +205,11 @@ func (d *dir) fullPath() string {
 }
 
 // tarballToTree converts a tarball into a complete filesystem tree.
-func (d *dir) tarballToTree(tarball io.Reader) error {
+func (d *dir) tarballToTree(tarball io.Reader) (err error) {
 	d.fetchFn = nil
 	tr := tar.NewReader(tarball)
+
+	var list []*tar.Header
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -216,7 +218,6 @@ func (d *dir) tarballToTree(tarball io.Reader) error {
 		if err != nil {
 			return err
 		}
-
 		switch hdr.Typeflag {
 		case tar.TypeReg:
 			path, filename := filepath.Split(hdr.Name)
@@ -237,32 +238,58 @@ func (d *dir) tarballToTree(tarball io.Reader) error {
 				d.makeDirs(parts, withDirModTime(hdr.ModTime))
 			}
 		case tar.TypeLink, tar.TypeSymlink:
-			insertPoint := d.fullPath()
-			targetPathOnly, _ := filepath.Split(hdr.Name)
-			targetParts := tarSplitPath(targetPathOnly)
-			target := filepath.Clean(insertPoint + "/" + strings.Join(targetParts, "/") + "/" + hdr.Linkname)
-			linkname := filepath.Clean(insertPoint + "/" + strings.Join(tarSplitPath(hdr.Name), "/"))
-
-			linknamePath, linknameFile := filepath.Split(linkname)
-			linknamePath = filepath.Clean(linknamePath)
-
-			targetDir, targetFile, err := d.gfs.root.find(target)
-			if err != nil {
-				return err
-			}
-			linknameDir, _, err := d.gfs.root.find(linknamePath)
-			if err != nil {
-				return err
-			}
-			if nil != targetFile {
-				linknameDir.children[filepath.Base(linkname)] = targetFile
-			} else {
-				linknameDir.children[linknameFile] = targetDir
-			}
+			list = append(list, hdr)
 		}
 	}
 
+	// Try to add symlinks from the list until either they are all applied or
+	// no progress is made.
+	last := len(list)
+	for len(list) > 0 {
+		list, err = d.processTarballList(list)
+		if err != nil {
+			return err
+		}
+		if len(list) == last {
+			return fmt.Errorf("unable to link to %s", list[0].Linkname)
+		}
+		last = len(list)
+	}
+
 	return nil
+}
+
+// processTarballList takes a list of symlinks and tries to create what it can.
+// Whatever it can't is returned for further processing.
+func (d *dir) processTarballList(list []*tar.Header) (later []*tar.Header, err error) {
+	for _, hdr := range list {
+		insertPoint := d.fullPath()
+		targetPathOnly, _ := filepath.Split(hdr.Name)
+		targetParts := tarSplitPath(targetPathOnly)
+		target := filepath.Clean(insertPoint + "/" + strings.Join(targetParts, "/") + "/" + hdr.Linkname)
+		linkname := filepath.Clean(insertPoint + "/" + strings.Join(tarSplitPath(hdr.Name), "/"))
+
+		linknamePath, linknameFile := filepath.Split(linkname)
+		linknamePath = filepath.Clean(linknamePath)
+
+		targetDir, targetFile, err := d.gfs.root.find(target)
+		if err != nil {
+			later = append(later, hdr)
+			continue
+		}
+		linknameDir, _, err := d.gfs.root.find(linknamePath)
+		if err != nil {
+			later = append(later, hdr)
+			continue
+		}
+		if nil != targetFile {
+			linknameDir.children[filepath.Base(linkname)] = targetFile
+		} else {
+			linknameDir.children[linknameFile] = targetDir
+		}
+	}
+
+	return later, nil
 }
 
 // fetch fetches the information about the directory and removes the fetch function
