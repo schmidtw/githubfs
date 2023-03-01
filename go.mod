@@ -3,7 +3,7 @@ module github.com/schmidtw/githubfs
 go 1.19
 
 require (
-	github.com/hasura/go-graphql-client v0.8.0
+	github.com/hasura/go-graphql-client v0.9.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 )
