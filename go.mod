@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/hasura/go-graphql-client v0.8.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.8.0
 )
 
